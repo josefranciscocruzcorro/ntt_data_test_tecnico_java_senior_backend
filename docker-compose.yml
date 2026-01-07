@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.3.2
+    container_name: zookeeper
+    network_mode: host
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  kafka:
+    image: confluentinc/cp-kafka:7.3.2
+    container_name: kafka
+    network_mode: host
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'localhost:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+
+  db:
+    image: postgres:15
+    container_name: postgres-db
+    network_mode: host
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: senior_db 
+    volumes:
+      - ./init-multiple-dbs.sh:/docker-entrypoint-initdb.d/init-multiple-dbs.sh
+
+  ms-clientes:
+    build: ./ms-clientes
+    container_name: ms-clientes
+    network_mode: host
+    depends_on:
+      - kafka
+      - db
+    environment:
+      - DB_URL=jdbc:postgresql://localhost:5432/db_clientes
+      - KAFKA_BROKER=localhost:9092
+
+  ms-cuentas:
+    build: ./ms-cuentas
+    container_name: ms-cuentas
+    network_mode: host
+    depends_on:
+      - kafka
+      - db
+    environment:
+      - DB_URL=jdbc:postgresql://localhost:5432/db_cuentas
+      - KAFKA_BROKER=localhost:9092

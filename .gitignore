@@ -1,0 +1,17 @@
+target/
+*.class
+.idea/
+*.iml
+.vscode/
+.DS_Store
+*.log
+*.jar
+.settings/
+.classpath
+.project
+kafka-logs/
+zookeeper-data/
+postgres-data/
+coverage/
+test-output/
+target/karate-reports/
